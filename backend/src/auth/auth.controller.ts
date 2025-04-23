@@ -11,9 +11,10 @@ import {
   HttpStatus,
   Put,
 } from '@nestjs/common';
-import { AuthService } from './auth.service';
+import { AuthService } from './services/auth.service';
 import { Request, Response } from 'express';
-import { JwtAuthGuard } from './guards/jwt-auth.guard'; // Ensure the path is correct
+import { GetUser } from './Decorator/get-user.decorator';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -56,7 +57,7 @@ export class AuthController {
 
   // ✅ Logout
   @Post('logout')
-  async logout(@Req() req: Request, @Res() res: Response) {
+  async logout( @Res() res: Response) {
     res.clearCookie('token');
     return res.status(200).json({ message: 'Logged out successfully' });
   }
@@ -64,8 +65,7 @@ export class AuthController {
   // ✅ Get current user info
   @Get('me')
   @UseGuards(JwtAuthGuard)
-  async getMe(@Req() req: Request) {
-    const userId = req.user['userId'];
+  async getMe(@GetUser("userId") userId: string) {
     return this.authService.getMe(userId);
   }
 
@@ -73,10 +73,9 @@ export class AuthController {
   @Post('complete-profile')
   @UseGuards(JwtAuthGuard)
   async completeProfile(
-    @Req() req: Request,
+    @GetUser("userId") userId:string,
     @Body() body: { firstName?: string; lastName?: string; phone?: string; avatar?: string },
   ) {
-    const userId = req.user['userId'];
 
     if (!body.firstName || !body.lastName || !body.phone) {
       throw new HttpException('First name, last name, and phone number are required', HttpStatus.BAD_REQUEST);
@@ -98,29 +97,5 @@ export class AuthController {
       throw new HttpException('Failed to update profile', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
-
-  // ✅ Update profile
-  @Put('update-profile')
-@UseGuards(JwtAuthGuard)
-async updateProfile(
-  @Req() req: Request,
-  @Body() body: { firstName?: string; lastName?: string; phone?: string; avatar?: string },
-) {
-  const userId = req.user['userId'];
-
-  try {
-    const updatedUser = await this.authService.updateProfile(userId, {
-      firstName: body.firstName,
-      lastName: body.lastName,
-      phone: body.phone,
-      avatar: body.avatar,
-    });
-
-    return { message: 'Profile updated successfully', user: updatedUser };
-  } catch (error) {
-    console.error('Update profile error:', error);
-    throw new HttpException('Failed to update profile', HttpStatus.INTERNAL_SERVER_ERROR);
-  }
-}
 
 }

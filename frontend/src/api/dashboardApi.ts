@@ -1,7 +1,4 @@
-// Mock API for dashboard data
-// In a real application, this would make actual API calls
 
-// Types
 interface DashboardData {
   stats: {
     revenue: string

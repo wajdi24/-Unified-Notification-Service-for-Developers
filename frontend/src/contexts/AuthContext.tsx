@@ -9,13 +9,16 @@ import axios from "axios"
 const API_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5001"
 
 interface User {
+  name: ReactNode
+  emailNotifications: boolean
+  pushNotifications: boolean
   id: string
   email: string
   firstName?: string
   lastName?: string
   avatar?: string
   phone?: string
-  isProfileComplete: boolean
+  isProfileCompleted: boolean
 }
 
 interface AuthContextType {
@@ -35,57 +38,60 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null)
+  console.log('----------', user);
+
   const [isLoading, setIsLoading] = useState(true)
   const navigate = useNavigate()
-  const {pathname}= useLocation()
+  const { pathname } = useLocation()
   // Check if user is authenticated on mount
-  useEffect(() => {
-    const checkAuth = async () => {
-      try {
+  const checkAuth = async () => {
+    try {
 
-        setIsLoading(true)
-        const token = localStorage.getItem("token")
-        
-        if (token) {
-          const userData = await authApi.getCurrentUser()
-          setUser(userData)
-          
-          console.log("here",userData)
-          if (!userData.isProfileCompleted) {
-            navigate("/complete-profile")
-          }
-          else if(pathname==='/complete-profile' || pathname==='/login' ){
-            navigate("/dashboard")
-          }
-          
-        }
-      } catch (error) {
-        console.error("Authentication check failed:", error)
-     
-        setUser(null)
-      } finally {
-        setIsLoading(false)
-      }
+      setIsLoading(true)
+      const token = localStorage.getItem("token")
+
+      if (token) {
+        const userData = await authApi.getCurrentUser()
+        setUser(userData)
+      } else { setUser(null) }
+    } catch (error) {
+
+      setUser(null)
+    } finally {
+      setIsLoading(false)
     }
-
+  }
+  useEffect(() => {
     checkAuth()
   }, [])
+
+  useEffect(() => {
+    const token = localStorage.getItem("token")
+    if (user===undefined)return;
+    if (token) {
+      if (user === null) {
+        navigate("/login")
+      } else {
+        if (!user?.isProfileCompleted) {
+          navigate("/complete-profile")
+        }
+        else if (pathname === '/complete-profile' || pathname === '/login') {
+          navigate("/dashboard")
+        }
+      }
+
+    }
+  }, [pathname, user])
 
   // ✅ Login function
   const login = async (email: string, password: string) => {
     const response = await axios.post(`${API_URL}/auth/signin`, { email, password });
     const data = response.data;
-  
+
     localStorage.setItem("token", data.accessToken);
-    setUser(data.user);
-  
-    if (!data.isProfileComplete) {
-      navigate("/complete-profile");
-    } else {
-      navigate("/dashboard");
-    }
+    checkAuth()
   };
-  
+
 
   // Logout function
   const logout = () => {
@@ -126,13 +132,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const setPassword = async (token: string, password: string) => {
     await setPasswordMutation.mutateAsync({ token, password })
   }
-  
+
 
   // Complete profile
   const completeProfileMutation = useMutation({
     mutationFn: authApi.completeProfile,
     onSuccess: (data) => {
-      setUser(data)
+      setUser(data?.user)
       navigate("/dashboard")
     },
   })
@@ -150,8 +156,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   // Update profile
   const updateProfileMutation = useMutation({
     mutationFn: authApi.updateProfile,
-    onSuccess: (data) => {
-      setUser(data)
+    onSuccess: () => {
+    checkAuth()
     },
   })
 
@@ -171,8 +177,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     completeProfile,
     updateProfile,
   }
+  
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
+  
 }
 
 export const useAuth = () => {

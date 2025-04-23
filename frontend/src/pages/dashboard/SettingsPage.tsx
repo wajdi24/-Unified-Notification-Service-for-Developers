@@ -1,5 +1,3 @@
-"use client"
-
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import { useForm } from "react-hook-form"
@@ -33,6 +31,7 @@ import {
 } from "@mui/icons-material"
 import { useThemeMode } from "../../contexts/ThemeModeContext"
 import LanguageSwitcher from "../../components/common/LanguageSwitcher"
+import authApi from "@/api/authApi"
 
 // Define validation schema for password change
 const passwordSchema = z
@@ -89,9 +88,15 @@ const SettingsPage = () => {
       setError(null)
       setSuccess(null)
       setIsLoading(true)
+      // Call the API to change password
+    await authApi.changePassword({
+      currentPassword: data.currentPassword,
+      newPassword: data.newPassword
+    })
 
       // In a real app, this would call an API to change the password
       await new Promise((resolve) => setTimeout(resolve, 1000))
+console.log(data)
 
       setSuccess("Password changed successfully")
       reset()
@@ -294,3 +299,7 @@ const SettingsPage = () => {
 }
 
 export default SettingsPage
+function changePassword(data: { currentPassword: string; newPassword: string; confirmPassword: string }) {
+  throw new Error("Function not implemented.")
+}
+

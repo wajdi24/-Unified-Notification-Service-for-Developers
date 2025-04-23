@@ -5,7 +5,7 @@ import { extname } from 'path';
 
 @Controller('auth')
 export class AuthController {
-  @Post('complete-profile')
+/*   @Post('complete-profile')
   @UseInterceptors(
     FileInterceptor('avatar', {
       storage: diskStorage({
@@ -21,5 +21,5 @@ export class AuthController {
   async completeProfile(@UploadedFile() file: Express.Multer.File) {
     console.log(file);
     // Handle the profile completion logic with the uploaded file
-  }
+  } */
 }

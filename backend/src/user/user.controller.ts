@@ -1,7 +1,8 @@
-import { Controller, Post, Body, Get, Param, UseGuards, HttpException, HttpStatus } from '@nestjs/common';
+import { Controller, Post, Body, Get, Param, UseGuards, HttpException, HttpStatus, Patch, Put } from '@nestjs/common';
 import { UserService } from './user.service';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CreateUserDto } from './dto/create-user.dto'; // Assuming you will create a DTO for creating users
+import { GetUser } from 'src/auth/Decorator/get-user.decorator';
 
 @Controller('user')
 export class UserController {
@@ -33,14 +34,21 @@ export class UserController {
   }
 
   // Update user profile (for complete profile)
-  @Post('complete-profile')
+  @Put('update-profile')
   @UseGuards(JwtAuthGuard)
-  async completeProfile(@Body() body: { phone?: string; firstName?: string; lastName?: string; avatar?: string }, @Param('userId') userId: string) {
+  async updateProfile(
+    @GetUser('userId') userId: string,
+        @Body() body: { firstName?: string; lastName?: string; phone?: string; avatar?: string },
+  ) {  
     try {
+      console.log('Update profile data:', userId);
+  
       const updatedUser = await this.userService.completeProfile(userId, body);
-      return { message: 'Profile updated successfully', updatedUser };
+  
+      return { message: 'Profile updated successfully', user: updatedUser };
     } catch (error) {
-      throw new HttpException('Error updating profile', HttpStatus.INTERNAL_SERVER_ERROR);
+      console.error('Update profile error:', error);
+      throw new HttpException('Failed to update profile', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 }

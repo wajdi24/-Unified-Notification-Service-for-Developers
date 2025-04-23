@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthController } from './auth/auth.controller';
-import { AuthService } from './auth/auth.service';
+import { AuthService } from './auth/services/auth.service';
 import { PrismaService } from './prisma/prisma.service';
 import { JwtModule } from '@nestjs/jwt';
 import { MailService } from './mail/mail.service';
@@ -9,6 +9,8 @@ import { MailerModule } from '@nestjs-modules/mailer';
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
 import { PassportModule } from '@nestjs/passport'; // Add PassportModule
 import { AuthModule } from './auth/auth.module';
+import { UserController } from './user/user.controller';
+import { UserService } from './user/user.service';
 
 @Module({
   imports: [
@@ -57,7 +59,7 @@ import { AuthModule } from './auth/auth.module';
       }),
     }),
   ],
-  controllers: [AuthController],
-  providers: [AuthService, PrismaService, MailService],
+  controllers: [AuthController,UserController],
+  providers: [AuthService, PrismaService, MailService,UserService],
 })
 export class AppModule {}

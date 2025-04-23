@@ -4,12 +4,10 @@ import { User } from "@/types/User";
 
 const API_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5001";
 
-// 🔐 إنشاء axios instance خاص
 const authAxios = axios.create({
   baseURL: API_URL,
 });
 
-// ⬇️ كل مرة يتبدل التوكن، نحدثوه في هذا interceptor
 authAxios.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("token");
@@ -49,13 +47,23 @@ export const authApi = {
   },
 
   updateProfile: async (userData: Partial<User>) => {
-    const response = await authAxios.put("/auth/update-profile", userData);
+    const response = await authAxios.put("/user/update-profile", userData);
     return response.data;
   },
 
   getCurrentUser: async () => {
-    const response = await authAxios.get("/auth/me");
+    const response = await authAxios.get(`${API_URL}/auth/me`);
     return response.data;
+  },
+  
+  changePassword: async (data: { currentPassword: string; newPassword: string }) => {
+    const token = localStorage.getItem("token")
+    const response = await axios.patch(`${API_URL}/auth/change-password`, data, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+    return response.data
   },
 };
 
