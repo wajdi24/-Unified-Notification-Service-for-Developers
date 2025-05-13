@@ -5,21 +5,11 @@ import { useLocation, useNavigate } from "react-router-dom"
 import { useMutation } from "@tanstack/react-query"
 import { authApi } from "../api/authApi"
 import axios from "axios"
+import { User } from "@/types/User"
 
 const API_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5001"
 
-interface User {
-  name: ReactNode
-  emailNotifications: boolean
-  pushNotifications: boolean
-  id: string
-  email: string
-  firstName?: string
-  lastName?: string
-  avatar?: string
-  phone?: string
-  isProfileCompleted: boolean
-}
+
 
 interface AuthContextType {
   user: User | null
@@ -67,7 +57,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     const token = localStorage.getItem("token")
-    if (user===undefined)return;
+    if (user === undefined) return;
     if (token) {
       if (user === null) {
         navigate("/login")
@@ -138,7 +128,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const completeProfileMutation = useMutation({
     mutationFn: authApi.completeProfile,
     onSuccess: (data) => {
-      setUser(data?.user)
+      setUser(data)
       navigate("/dashboard")
     },
   })
@@ -157,7 +147,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const updateProfileMutation = useMutation({
     mutationFn: authApi.updateProfile,
     onSuccess: () => {
-    checkAuth()
+      checkAuth()
     },
   })
 
@@ -177,10 +167,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     completeProfile,
     updateProfile,
   }
-  
+
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
-  
+
 }
 
 export const useAuth = () => {

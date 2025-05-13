@@ -1,0 +1,21 @@
+@keyframes float {
+    0% {
+      transform: translateY(0) rotate(0deg);
+      opacity: 0;
+    }
+    10% {
+      opacity: 1;
+    }
+    100% {
+      transform: translateY(-1000%) rotate(720deg);
+      opacity: 0;
+    }
+  }
+  
+  .bubble-background span {
+    position: absolute;
+    border-radius: 50%;
+    animation: float 15s linear infinite;
+    z-index: 1;
+  }
+  

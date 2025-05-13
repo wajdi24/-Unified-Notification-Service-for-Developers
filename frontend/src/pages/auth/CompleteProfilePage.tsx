@@ -1,12 +1,12 @@
-"use client";
+"use client"
 
-import type React from "react";
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { useTranslation } from "react-i18next";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import type React from "react"
+import { useState } from "react"
+import { useNavigate } from "react-router-dom"
+import { useTranslation } from "react-i18next"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { z } from "zod"
 import {
   Container,
   Box,
@@ -15,37 +15,37 @@ import {
   Button,
   Paper,
   Avatar,
-  Alert,
   CircularProgress,
   Grid,
   useMediaQuery,
   useTheme,
-} from "@mui/material";
-import { Person as PersonIcon } from "@mui/icons-material";
+} from "@mui/material"
+import { Person as PersonIcon } from "@mui/icons-material"
+import { toast, ToastContainer } from "react-toastify"
+import "react-toastify/dist/ReactToastify.css"
 
-import { useAuth } from "../../contexts/AuthContext";
-import LanguageSwitcher from "../../components/common/LanguageSwitcher";
-import ThemeToggle from "../../components/common/ThemeToggle";
+import { useAuth } from "../../contexts/AuthContext"
+import LanguageSwitcher from "../../components/common/LanguageSwitcher"
+import ThemeToggle from "../../components/common/ThemeToggle"
 
 // Define validation schema
 const profileSchema = z.object({
   firstName: z.string().min(2, { message: "First name must be at least 2 characters" }),
   lastName: z.string().min(2, { message: "Last name must be at least 2 characters" }),
   phone: z.string().optional(),
-});
+})
 
-type ProfileFormData = z.infer<typeof profileSchema>;
+type ProfileFormData = z.infer<typeof profileSchema>
 
 const CompleteProfilePage = () => {
-  const { t } = useTranslation();
-  const { user, completeProfile } = useAuth();
-  const navigate = useNavigate();
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-  const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [avatarFile, setAvatarFile] = useState<File | null>(null);
-  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const { t } = useTranslation()
+  const { user, completeProfile } = useAuth()
+  const navigate = useNavigate()
+  const theme = useTheme()
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"))
+  const [isLoading, setIsLoading] = useState(false)
+  const [avatarFile, setAvatarFile] = useState<File | null>(null)
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
 
   // React Hook Form
   const {
@@ -59,52 +59,90 @@ const CompleteProfilePage = () => {
       lastName: user?.lastName || "",
       phone: user?.phone || "",
     },
-  });
+  })
 
   // Handle avatar change
   const handleAvatarChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files[0]) {
-      const file = event.target.files[0];
-      setAvatarFile(file);
+      const file = event.target.files[0]
+
+      // Check file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        toast.warning("Image size should be less than 5MB", {
+          position: "top-right",
+          autoClose: 3000,
+        })
+        return
+      }
+
+      setAvatarFile(file)
 
       // Create preview
-      const reader = new FileReader();
+      const reader = new FileReader()
       reader.onload = (e) => {
-        setAvatarPreview(e.target?.result as string);
-      };
-      reader.readAsDataURL(file);
+        setAvatarPreview(e.target?.result as string)
+        toast.info("Avatar preview updated", {
+          position: "top-right",
+          autoClose: 2000,
+        })
+      }
+      reader.readAsDataURL(file)
     }
-  };
+  }
 
   // Handle form submission
   const onSubmit = async (data: ProfileFormData) => {
     try {
-      setError(null);
-      setIsLoading(true);
+      setIsLoading(true)
+      toast.info("Updating your profile...", {
+        position: "top-right",
+        autoClose: 2000,
+      })
 
       // In a real app, you would upload the avatar file to a storage service
       // and get back a URL to store in the user profile
-      let avatarUrl: string | undefined = user?.avatar || undefined;
+      let avatarUrl: string | undefined = user?.avatar || undefined
       if (avatarFile) {
         // Mock avatar upload
-        avatarUrl = avatarPreview ? avatarPreview : undefined; // Default to undefined if avatarPreview is null
+        avatarUrl = avatarPreview ? avatarPreview : undefined // Default to undefined if avatarPreview is null
       }
 
       await completeProfile({
         ...data,
         avatar: avatarUrl, // Now avatarUrl is safely either string or undefined
-      });
+      })
+
+      toast.success("Profile updated successfully!", {
+        position: "top-right",
+        autoClose: 3000,
+      })
 
       // Navigation is handled in the auth context
     } catch (err: any) {
-      setError(err.message || "Failed to update profile. Please try again.");
+      toast.error(err.message || "Failed to update profile. Please try again.", {
+        position: "top-right",
+        autoClose: 5000,
+      })
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   return (
     <Container component="main" maxWidth="sm">
+      <ToastContainer
+        position="top-right"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+      />
+
       <Box
         sx={{
           display: "flex",
@@ -140,12 +178,6 @@ const CompleteProfilePage = () => {
           <Typography variant="body2" sx={{ mt: 1, mb: 3, textAlign: "center" }}>
             {t("completeProfileDescription")}
           </Typography>
-
-          {error && (
-            <Alert severity="error" sx={{ mt: 2, width: "100%" }}>
-              {error}
-            </Alert>
-          )}
 
           <Box component="form" onSubmit={handleSubmit(onSubmit)} sx={{ mt: 1, width: "100%" }}>
             <Grid container spacing={2}>
@@ -216,7 +248,7 @@ const CompleteProfilePage = () => {
         </Paper>
       </Box>
     </Container>
-  );
-};
+  )
+}
 
-export default CompleteProfilePage;
+export default CompleteProfilePage

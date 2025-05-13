@@ -1,6 +1,7 @@
 export interface User {
   id: string;
-  name: string;
+  firstName: string
+  lastName: string
   email: string;
   phone: string;
   password?: string;
@@ -11,6 +12,8 @@ export interface User {
   verificationToken?: string;
   passwordResetToken?: string;
   passwordResetTokenExpiry?: string;
+  isProfileCompleted: boolean;
+  avatar?: string
 }
 
 export interface AuthenticatedUser extends User {

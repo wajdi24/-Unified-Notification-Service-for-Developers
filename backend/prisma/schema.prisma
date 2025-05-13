@@ -8,18 +8,87 @@ datasource db {
 }
 
 model User {
-  id                 String   @id @default(uuid())
-  email              String   @unique
-  password           String
-  firstName          String?
-  lastName           String?
-  phone              String?
-  avatar             String?
-  isProfileCompleted   Boolean  @default(false)
-  verified           Boolean  @default(false)
-  verificationToken  String?
-  resetToken         String?
-  resetTokenExpiry   DateTime?
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
+  id                  String                  @id @default(uuid())
+  email               String                  @unique
+  password            String
+  firstName           String?
+  lastName            String?
+  phone               String?
+  avatar              String?
+  isProfileCompleted  Boolean                 @default(false)
+  verified            Boolean                 @default(false)
+  verificationToken   String?
+  resetToken          String?
+  resetTokenExpiry    DateTime?
+  createdAt           DateTime                @default(now())
+  updatedAt           DateTime                @updatedAt
+
+  templates           Template[]
+  projects            Project[]
+  notificationDeliveries NotificationDelivery[]
 }
+
+model Template {
+  id          String         @id @default(uuid())
+  body        String
+  type        TemplateType
+  userId      String
+  user        User           @relation(fields: [userId], references: [id])
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+}
+
+enum TemplateType {
+  EMAIL
+  SMS
+}
+
+model Notification {
+  id                     String                @id @default(uuid())
+  title                  String
+  projectId              String?                
+  project                Project?               @relation(fields: [projectId], references: [id])
+  createdAt              DateTime               @default(now())
+  updatedAt              DateTime               @updatedAt
+  externalId             String
+
+}
+
+model Project {
+  id                     String                  @id @default(uuid())
+  nameProject            String
+  apiKey                 String                  @unique @default(uuid())
+  userId                 String
+  user                   User                    @relation(fields: [userId], references: [id])
+  notificationDeliveries NotificationDelivery[]
+  notifications          Notification[]
+  createdAt              DateTime                @default(now())
+  updatedAt              DateTime                @updatedAt
+}
+
+model NotificationDelivery {
+  id            String         @id @default(uuid())
+  title         String
+  subject       String
+  body          String
+  type          DeliveryType
+  projectId     String
+  project       Project        @relation(fields: [projectId], references: [id])
+  userId        String
+  user          User           @relation(fields: [userId], references: [id])
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+}
+
+enum DeliveryType {
+  EMAIL
+  SMS
+  PUSH
+}
+
+enum NotificationStatus {
+  PENDING
+  SENT
+  FAILED
+}
+  

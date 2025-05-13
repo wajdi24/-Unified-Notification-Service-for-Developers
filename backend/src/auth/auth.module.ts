@@ -6,7 +6,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MailService } from '../mail/mail.service';
-import { JwtStrategy } from './strategies/jwt.strategy'; // تأكد من أنك ضايفه هنا
+import { JwtStrategy } from './strategies/jwt.strategy'; 
 @Module({
   imports: [
     ConfigModule, // For accessing environment variables
@@ -33,5 +33,6 @@ import { JwtStrategy } from './strategies/jwt.strategy'; // تأكد من أنك
     MailService,
     JwtStrategy, // Ensure this is included for strategy registration
   ],
+  
 })
 export class AuthModule {}

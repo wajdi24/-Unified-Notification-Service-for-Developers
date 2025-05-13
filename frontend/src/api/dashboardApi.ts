@@ -1,4 +1,4 @@
-
+// Types
 interface DashboardData {
   stats: {
     revenue: string
@@ -72,7 +72,7 @@ export const dashboardApi = {
   // Get dashboard data
   getDashboardData: async (): Promise<DashboardData> => {
     // Simulate API call
-    await delay(1000)
+    await delay(500)
 
     // In a real app, this would fetch dashboard data from the backend
     return mockDashboardData

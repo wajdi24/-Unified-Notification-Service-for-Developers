@@ -17,14 +17,14 @@ async function bootstrap() {
 
   // Enable CORS for frontend access
   app.enableCors({
-    origin: configService.get<string>('CORS_ORIGIN'),  
-    credentials: true,  
+    origin: configService.get<string>('CORS_ORIGIN'),
+    credentials: true,
   });
 
   // Enable global validation pipe for DTO validation
   app.useGlobalPipes(new ValidationPipe({
     whitelist: true,
-    forbidNonWhitelisted: true,
+    // forbidNonWhitelisted: true,
   }));
 
   // Start the application on the specified port

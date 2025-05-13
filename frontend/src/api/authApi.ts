@@ -1,70 +1,182 @@
-// src/api/authApi.ts
-import axios from "axios";
-import { User } from "@/types/User";
+import axios, { type AxiosError } from "axios"
+import type { User } from "@/types/User"
+import axiosInstance from "./axios"
 
-const API_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5001";
+// API response types for better type safety
+interface AuthResponse {
+  user: User
+  token: string
+  message?: string
+}
 
-const authAxios = axios.create({
-  baseURL: API_URL,
-});
+interface MessageResponse {
+  message: string
+}
 
-authAxios.interceptors.request.use(
+// Request interceptor for adding auth token
+axiosInstance.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem("token");
-    console.log("🚀 Sending token:------------------------->", token); 
+    const token = localStorage.getItem("token")
     if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+      config.headers.Authorization = `Bearer ${token}`
     }
-    return config;
+    return config
   },
-  (error) => Promise.reject(error)
-);
+  (error) => Promise.reject(error),
+)
+
+// Response interceptor for handling common errors
+axiosInstance.interceptors.response.use(
+  (response) => response,
+  (error: AxiosError<{ message?: string }>) => {
+    // Handle token expiration
+    if (error.response?.status === 401) {
+      // Clear token if it's expired or invalid
+      localStorage.removeItem("token")
+      // You could also redirect to login page here
+    }
+
+    // Enhanced error message
+    const errorMessage = error.response?.data?.message || error.message || "An unknown error occurred"
+
+    return Promise.reject(new Error(errorMessage))
+  },
+)
 
 export const authApi = {
-  login: async (data: { email: string; password: string }) => {
-    const response = await axios.post(`${API_URL}/auth/signin`, data);
-    return response.data;
+  /**
+   * User login
+   */
+  login: async (data: { email: string; password: string }): Promise<AuthResponse> => {
+    try {
+      const response = await axiosInstance.post<AuthResponse>("/auth/signin", data)
+      return response.data
+    } catch (error) {
+      throw error
+    }
   },
 
-  register: async (data: { name: string; email: string; password: string; phone: string }) => {
-    const response = await axios.post(`${API_URL}/auth/signup`, data);
-    return response.data;
+  /**
+   * User registration
+   */
+  register: async (data: {
+    name: string
+    email: string
+    password: string
+    phone: string
+  }): Promise<MessageResponse> => {
+    try {
+      const response = await axiosInstance.post<MessageResponse>("/auth/signup", data)
+      return response.data
+    } catch (error) {
+      throw error
+    }
   },
 
-  requestPasswordReset: async (email: string) => {
-    const response = await axios.post(`${API_URL}/auth/forgot-password`, { email });
-    return response.data;
+  /**
+   * Request password reset
+   */
+  requestPasswordReset: async (email: string): Promise<MessageResponse> => {
+    try {
+      const response = await axiosInstance.post<MessageResponse>("/auth/forgot-password", { email })
+      return response.data
+    } catch (error) {
+      throw error
+    }
   },
 
-  resetPassword: async (data: { token: string; password: string }) => {
-    const response = await axios.post(`${API_URL}/auth/reset-password`, data);
-    return response.data;
+  /**
+   * Reset password with token
+   */
+  resetPassword: async (data: {
+    token: string
+    password: string
+  }): Promise<MessageResponse> => {
+    try {
+      const response = await axiosInstance.post<MessageResponse>("/auth/reset-password", data)
+      return response.data
+    } catch (error) {
+      throw error
+    }
   },
 
-  completeProfile: async (userData: Partial<User>) => {
-    const response = await authAxios.post("/auth/complete-profile", userData);
-    return response.data;
+  /**
+   * Complete user profile
+   */
+  completeProfile: async (userData: Partial<User>): Promise<User> => {
+    try {
+      const response = await axiosInstance.post<User>("/auth/complete-profile", userData)
+      return response.data
+    } catch (error) {
+      throw error
+    }
   },
 
-  updateProfile: async (userData: Partial<User>) => {
-    const response = await authAxios.put("/user/update-profile", userData);
-    return response.data;
+  /**
+   * Update user profile
+   */
+  updateProfile: async (userData: Partial<User>): Promise<User> => {
+    try {
+      const response = await axiosInstance.put<User>("/user/update-profile", userData)
+      return response.data
+    } catch (error) {
+      throw error
+    }
   },
 
-  getCurrentUser: async () => {
-    const response = await authAxios.get(`${API_URL}/auth/me`);
-    return response.data;
+  /**
+   * Get current user data
+   */
+  getCurrentUser: async (): Promise<User> => {
+    try {
+      const response = await axiosInstance.get<User>("/auth/me")
+      return response.data
+    } catch (error) {
+      throw error
+    }
   },
-  
-  changePassword: async (data: { currentPassword: string; newPassword: string }) => {
-    const token = localStorage.getItem("token")
-    const response = await axios.patch(`${API_URL}/auth/change-password`, data, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    })
-    return response.data
-  },
-};
 
-export default authApi;
+  /**
+   * Change user password
+   */
+  changePassword: async (data: {
+    currentPassword: string
+    newPassword: string
+  }): Promise<MessageResponse> => {
+    try {
+      const response = await axiosInstance.patch<MessageResponse>("/auth/change-password", data)
+      return response.data
+    } catch (error) {
+      throw error
+    }
+  },
+
+  /**
+   * Logout user (clear token)
+   */
+  logout: async (): Promise<void> => {
+    try {
+      // Optional: Call backend to invalidate token
+      await axiosInstance.post("/auth/logout")
+    } catch (error) {
+      // Even if the server call fails, clear the local token
+      console.error("Logout error:", error)
+    } finally {
+      localStorage.removeItem("token")
+    }
+  },
+
+  /**
+   * Verify email with token
+   */
+  verifyEmail: async (token: string): Promise<MessageResponse> => {
+    try {
+      const response = await axiosInstance.get<MessageResponse>(`/auth/verify-email?token=${token}`)
+      return response.data
+    } catch (error) {
+      throw error
+    }
+  },
+}
+
+export default authApi

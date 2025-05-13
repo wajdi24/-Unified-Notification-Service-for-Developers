@@ -8,15 +8,20 @@ import { MailService } from './mail/mail.service';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
 import { PassportModule } from '@nestjs/passport'; // Add PassportModule
+import { TemplateModule } from './modules/template/template.module';
 import { AuthModule } from './auth/auth.module';
 import { UserController } from './user/user.controller';
 import { UserService } from './user/user.service';
+import { NotificationModule } from './notification/notification.module';
+import { ProjectModule } from './project/project.module';
 
 @Module({
   imports: [
     AuthModule,
+    TemplateModule, // Ensure TemplateModule is added here
     // Load environment variables from .env file
     ConfigModule.forRoot(),
+    NotificationModule, // ✅ Add this line
 
     // PassportModule for JWT strategy
     PassportModule.register({ defaultStrategy: 'jwt' }), // Add PassportModule
@@ -30,7 +35,7 @@ import { UserService } from './user/user.service';
         signOptions: { expiresIn: '1h' },
       }),
     }),
-
+    ProjectModule,
     // MailerModule configuration using environment variables
     MailerModule.forRootAsync({
       imports: [ConfigModule],
@@ -59,7 +64,7 @@ import { UserService } from './user/user.service';
       }),
     }),
   ],
-  controllers: [AuthController,UserController],
-  providers: [AuthService, PrismaService, MailService,UserService],
+  controllers: [AuthController, UserController], // Add TemplateController here if needed
+  providers: [AuthService, PrismaService, MailService, UserService],
 })
 export class AppModule {}
